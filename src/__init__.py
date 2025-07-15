@@ -8,6 +8,14 @@ from .linear_sist_methods import (
     comparar_tiempos,
 )
 
+from .iterative_methods import (
+    gauss_jacobi,
+    gauss_seidel,
+    animar_trayectoria,
+    
+
+)  # type: ignore
+
 # from .iterative_methods import gauss_jacobi, gauss_seidel  # type: ignore
 
 # from .ODE import ODE_euler, ODE_euler_nth  # type: ignore
