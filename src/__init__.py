@@ -12,8 +12,8 @@ from .iterative_methods import (
     gauss_jacobi,
     gauss_seidel,
     animar_trayectoria,
+    animar_varias_trayectorias
     
-
 )  # type: ignore
 
 # from .iterative_methods import gauss_jacobi, gauss_seidel  # type: ignore

@@ -128,3 +128,99 @@ def animar_trayectoria(
     anim.save(filename, writer=PillowWriter(fps=1))
     plt.close()
     print(f"🎞️ GIF guardado como '{filename}'")
+
+def animar_varias_trayectorias(
+    trays_info,  # lista de tuplas (trayectoria, convergio, solucion, nombre_aprox)
+    metodo_nombre="Método",
+    filename="varias_trayectorias.gif",
+    A=None, b=None,
+    repeticiones_final=5
+):
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation, PillowWriter
+    from matplotlib.patheffects import withStroke
+    import numpy as np
+
+    colores = ['blue', 'green', 'purple']
+    marcadores = ['o-', 's-', '^-']
+    inicio_colors = ['red', 'orange', 'brown']
+
+    num_approx = len(trays_info)
+    max_len = max(len(t[0]) for t in trays_info)
+    total_frames = max_len + repeticiones_final - 1
+
+    fig, ax = plt.subplots()
+    lineas = []
+    inicios = []
+    for i in range(num_approx):
+        l, = ax.plot([], [], marcadores[i], color=colores[i], label=trays_info[i][3])
+        lineas.append(l)
+        ini, = ax.plot([], [], 'o', color=inicio_colors[i])
+        inicios.append(ini)
+
+    # Texto final
+    texto_final = ax.text(
+        0.98, 0.02, '', 
+        transform=ax.transAxes, 
+        ha='right', va='bottom',
+        fontsize=11,
+        weight='bold',
+        path_effects=[withStroke(linewidth=3, foreground='white')]
+    )
+
+    ax.set_xlabel("x0")
+    ax.set_ylabel("x1")
+    ax.set_title(f"Trayectorias ({metodo_nombre})")
+    ax.grid(True)
+
+    # Dibujo del sistema Ax = b
+    if A is not None and b is not None:
+        x_vals = np.linspace(-10, 10, 400)
+        for i in range(A.shape[0]):
+            if A[i, 1] != 0:
+                y_vals = (b[i, 0] - A[i, 0] * x_vals) / A[i, 1]
+                ax.plot(x_vals, y_vals, linestyle='--', label=f"Ec {i+1}")
+            else:
+                x_const = b[i, 0] / A[i, 0]
+                ax.axvline(x_const, linestyle='--', label=f"Ec {i+1}")
+
+    def actualizar(frame):
+        min_xs, max_xs, min_ys, max_ys = [], [], [], []
+
+        for i, (tray, _, _, _) in enumerate(trays_info):
+            idx = min(frame, len(tray) - 1)
+            xs = [v[0, 0] for v in tray[:idx + 1]]
+            ys = [v[1, 0] for v in tray[:idx + 1]]
+
+            lineas[i].set_data(xs, ys)
+            inicios[i].set_data([tray[0][0, 0]], [tray[0][1, 0]])
+
+            min_xs += xs
+            max_xs += xs
+            min_ys += ys
+            max_ys += ys
+
+        # Zoom dinámico
+        margen = 1
+        ax.set_xlim(min(min_xs) - margen, max(max_xs) + margen)
+        ax.set_ylim(min(min_ys) - margen, max(max_ys) + margen)
+
+        # Mensaje final
+        if frame >= max_len - 1:
+            textos = []
+            for i, (tray, convergio, sol, nombre) in enumerate(trays_info):
+                if convergio:
+                    textos.append(f"✅ {nombre}: {np.round(sol.flatten(), 4)}")
+                else:
+                    textos.append(f"❌ {nombre}: Divergió")
+            texto_final.set_text('\n'.join(textos))
+        else:
+            texto_final.set_text("")
+
+        return lineas + inicios + [texto_final]
+
+    ax.legend()
+    anim = FuncAnimation(fig, actualizar, frames=total_frames, interval=800, blit=True)
+    anim.save(filename, writer=PillowWriter(fps=1))
+    plt.close()
+    print(f"🎞️ GIF con varias trayectorias guardado como '{filename}'")
