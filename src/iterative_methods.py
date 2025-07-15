@@ -26,9 +26,9 @@ def gauss_jacobi(*, A: np.array, b: np.array, x0: np.array, tol: float, max_iter
 
         tray.append(x_new.copy())
         if np.linalg.norm(x_new - x) < tol:
-            break
+            return x_new, tray, True
         x = x_new.copy()
-    return x, tray
+    return x, tray, False
 
 
 def gauss_seidel(*, A: np.array, b: np.array, x0: np.array, tol: float, max_iter: int):
@@ -43,33 +43,48 @@ def gauss_seidel(*, A: np.array, b: np.array, x0: np.array, tol: float, max_iter
 
         tray.append(x_new.copy())
         if np.linalg.norm(x_new - x) < tol:
-            break
+            return x_new, tray, True
         x = x_new.copy()
-    return x, tray
+    return x, tray, False
 
 
-# ------------------ Animación de trayectoria ------------------
+# ------------------ Animación mejorada ------------------
 
-def animar_trayectoria(tray, metodo_nombre="Metodo", filename="trayectoria.gif"):
+def animar_trayectoria(tray, metodo_nombre="Método", filename="trayectoria.gif", convergio=True, solucion=None):
     xs = [vec[0, 0] for vec in tray]
     ys = [vec[1, 0] for vec in tray]
 
     fig, ax = plt.subplots()
-    ax.set_xlim(min(xs) - 1, max(xs) + 1)
-    ax.set_ylim(min(ys) - 1, max(ys) + 1)
+    linea, = ax.plot([], [], 'o-', color='blue', label='Iteraciones')
+    inicio, = ax.plot([], [], 'ro', label='Punto inicial')
+    texto_final = ax.text(0.5, 1.05, '', transform=ax.transAxes, ha='center', fontsize=10, color='green')
     ax.set_xlabel("x0")
     ax.set_ylabel("x1")
     ax.set_title(f"Trayectoria de {metodo_nombre}")
-    linea, = ax.plot([], [], 'o-', color='blue')
 
     def actualizar(frame):
-        linea.set_data(xs[:frame+1], ys[:frame+1])
-        return linea,
+        if frame == 0:
+            inicio.set_data([xs[0]], [ys[0]])
+        linea.set_data(xs[:frame + 1], ys[:frame + 1])
+
+        # Auto-ajuste de límites
+        margen = 1
+        ax.set_xlim(min(xs[:frame + 1]) - margen, max(xs[:frame + 1]) + margen)
+        ax.set_ylim(min(ys[:frame + 1]) - margen, max(ys[:frame + 1]) + margen)
+
+        # Mostrar mensaje final si es el último frame
+        if frame == len(xs) - 1:
+            if convergio:
+                texto_final.set_text(f"✅ Convergió a {solucion.flatten()}")
+                texto_final.set_color('green')
+            else:
+                texto_final.set_text("❌ Divergió")
+                texto_final.set_color('red')
+
+        return linea, inicio, texto_final
 
     anim = FuncAnimation(fig, actualizar, frames=len(xs), interval=800, blit=True)
     anim.save(filename, writer=PillowWriter(fps=1))
     plt.close()
-    print(f"✅ GIF guardado como '{filename}'")
-
-# ------------------ Ejemplo de uso ------------------
+    print(f"🎞️ GIF guardado como '{filename}'")
 
