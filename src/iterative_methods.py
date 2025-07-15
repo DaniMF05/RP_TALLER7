@@ -124,7 +124,7 @@ def animar_trayectoria(
 
         return linea, inicio, texto_final
 
-    anim = FuncAnimation(fig, actualizar, frames=total_frames, interval=800, blit=True)
+    anim = FuncAnimation(fig, actualizar, frames=total_frames, interval=200, blit=True)
     anim.save(filename, writer=PillowWriter(fps=1))
     plt.close()
     print(f"🎞️ GIF guardado como '{filename}'")
