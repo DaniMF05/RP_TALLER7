@@ -221,6 +221,6 @@ def animar_varias_trayectorias(
 
     ax.legend()
     anim = FuncAnimation(fig, actualizar, frames=total_frames, interval=800, blit=True)
-    anim.save(filename, writer=PillowWriter(fps=1))
+    anim.save(filename, writer=PillowWriter(fps=5))
     plt.close()
     print(f"🎞️ GIF con varias trayectorias guardado como '{filename}'")
